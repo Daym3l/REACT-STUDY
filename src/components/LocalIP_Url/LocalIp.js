@@ -1,6 +1,5 @@
 import React from 'react';
 
-import internalIp from 'internal-ip';
 
 const getUserIP = (onNewIP) => { //  onNewIp - your listener function for new IPs
     //compatibility for firefox and chrome
@@ -43,12 +42,12 @@ const getUserIP = (onNewIP) => { //  onNewIp - your listener function for new IP
 
 const LocalIp = props => {
 
-        return <div>
+        return <div style={{marginTop: 20}}>
             <button onClick={() => {
                 getUserIP((ip) => {
                     alert("Got IP! :" + ip);
                 });
-            }}>click me
+            }}>Show Local IP
             </button>
 
         </div>

@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import MultiSelect from 'react-select-checked';
 import ReactSelect from 'react-select';
 
 class CheckedSelect extends Component {
@@ -14,7 +13,7 @@ class CheckedSelect extends Component {
     handleOnChange = val => this.setState({selectedOptions: val})
 
     render() {
-        return <div style={{width: 300}}>
+        return <div style={{width: 300, margin: "auto"}}>
             <label><h4>MULTISELECT</h4></label>
             <ReactSelect
                 name="form-field-name"
@@ -25,6 +24,6 @@ class CheckedSelect extends Component {
         </div>
 
     }
-    }
+}
 
-    export default CheckedSelect
+export default CheckedSelect

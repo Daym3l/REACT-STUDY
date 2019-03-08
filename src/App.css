@@ -4,8 +4,8 @@
 }
 
 .componentes {
-    margin-left: 43%;
-    margin-top: 50px;
+    display: block;
+    margin: 0 auto;
 }
 
 .App-logo {
