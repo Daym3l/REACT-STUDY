@@ -1,56 +1,72 @@
 import React from 'react';
 
+const findLocalIp = (logInfo = true) => new Promise((resolve, reject) => {
+    window.RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
 
-const getUserIP = (onNewIP) => { //  onNewIp - your listener function for new IPs
-    //compatibility for firefox and chrome
-    let myPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-    let pc = new myPeerConnection({
-            iceServers: []
-        }),
-        noop = function () {
-        },
-        localIPs = {},
-        ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/g,
-        key;
+    if (typeof window.RTCPeerConnection === 'undefined')
+        return reject('WebRTC not supported by browser');
 
-    function iterateIP(ip) {
-        if (!localIPs[ip]) onNewIP(ip);
-        localIPs[ip] = true;
-    }
+    let pc = new RTCPeerConnection();
+    let ips = [];
 
-    //create a bogus data channel
     pc.createDataChannel("");
+    pc.createOffer()
+        .then(offer => pc.setLocalDescription(offer))
+        .catch(err => reject(err));
+    pc.onicecandidate = event => {
+        if (!event || !event.candidate) {
+            // All ICE candidates have been sent.
+            if (ips.length === 0)
+                return reject('WebRTC disabled or restricted by browser');
 
-    // create offer and set local description
-    pc.createOffer().then(function (sdp) {
-        sdp.sdp.split('\n').forEach(function (line) {
-            if (line.indexOf('candidate') < 0) return;
-            line.match(ipRegex).forEach(iterateIP);
-        });
+            return resolve(ips);
+        }
 
-        pc.setLocalDescription(sdp, noop, noop);
-    }).catch(function (reason) {
-        // An error occurred, so handle the failure to connect
-    });
+        let parts = event.candidate.candidate.split(' ');
+        let [base, componentId, protocol, priority, ip, port, , type, ...attr] = parts;
+        let component = ['rtp', 'rtpc'];
 
-    //listen for candidate events
-    pc.onicecandidate = function (ice) {
-        if (!ice || !ice.candidate || !ice.candidate.candidate || !ice.candidate.candidate.match(ipRegex)) return;
-        ice.candidate.candidate.match(ipRegex).forEach(iterateIP);
+        if (!ips.some(e => e === ip))
+            ips.push(ip);
+
+        if (!logInfo)
+            return;
+
+        console.log(" candidate: " + base.split(':')[1]);
+        console.log(" component: " + component[componentId - 1]);
+        console.log("  protocol: " + protocol);
+        console.log("  priority: " + priority);
+        console.log("        ip: " + ip);
+        console.log("      port: " + port);
+        console.log("      type: " + type);
+
+        if (attr.length) {
+            console.log("attributes: ");
+            for (let i = 0; i < attr.length; i += 2)
+                console.log("> " + attr[i] + ": " + attr[i + 1]);
+        }
+
+        console.log();
     };
-}
+});
+
 
 const LocalIp = props => {
-
-        return <div style={{marginTop: 20}}>
-            <button onClick={() => {
-                getUserIP((ip) => {
-                    alert("Got IP! :" + ip);
-                });
-            }}>Show Local IP
+    return <div style={{ marginTop: 20 }}>
+        <button onClick={() => {
+            findLocalIp().then(
+                ips => {
+                    let s = '';
+                    ips.forEach( ip => s += ip );
+                    alert("My IP :" + s);
+                },
+                err =>  alert(err)
+            )
+           
+        }}>Show Local IP
             </button>
 
-        </div>
-    }
-;
+    </div>
+}
+    ;
 export default LocalIp
